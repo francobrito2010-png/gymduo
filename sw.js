@@ -1,5 +1,5 @@
 /* GymDuo — Service Worker (offline con caché). */
-const CACHE = 'gymduo-v3'
+const CACHE = 'gymduo-v4'
 const ASSETS = [
   './', './index.html', './styles.css',
   './firebase.js', './exercises.js', './geometry.js', './eximg.js', './plan.js', './sync.js', './app.js',

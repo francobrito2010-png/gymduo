@@ -227,3 +227,80 @@ b{font-weight:700}
 .progex-fig{width:74px;height:56px;flex:none}
 .progex-fig .exgif{width:100%;height:100%;border-radius:9px}
 .progex-noimg{width:74px;height:56px;border-radius:9px;background:var(--card2);display:grid;place-items:center;font-weight:800;color:var(--mut);font-size:20px}
+
+/* ============================================================
+   PULIDO PROFESIONAL / DINÁMICO
+   ============================================================ */
+@keyframes gd-slideup{from{transform:translateY(26px);opacity:.3}to{transform:translateY(0);opacity:1}}
+@keyframes gd-fade{from{opacity:0}to{opacity:1}}
+@keyframes gd-shimmer{0%{background-position:-140% 0}100%{background-position:140% 0}}
+@keyframes gd-pop{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+*{transition-property:background-color,border-color,color,box-shadow,transform,opacity;transition-duration:.16s;transition-timing-function:ease}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(130% 55% at 50% -8%,#191c25 0%,var(--bg) 55%) fixed}
+
+/* tarjetas con profundidad */
+.card{box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 10px 26px -18px rgba(0,0,0,.9)}
+
+/* botones principales: degradado + brillo + pulsación */
+.cta{background:linear-gradient(180deg,#2ee06a,#18b455);box-shadow:0 8px 22px -10px rgba(34,197,94,.6);letter-spacing:.2px}
+.cta:hover{filter:brightness(1.06)}
+.cta:active{transform:scale(.985);filter:brightness(.97)}
+.cta.ghost{background:var(--card);box-shadow:none}
+.cta.ghost:hover{background:var(--card2)}
+.cta.okc{background:linear-gradient(180deg,#1c8a45,#12622f)}
+
+/* chips, segmentos, filas: reacción al tacto/hover */
+.chip,.segb{transition:all .16s ease}
+.segb:hover{border-color:#3a4150}
+.pcard:hover{transform:translateY(-3px);box-shadow:0 16px 30px -18px rgba(0,0,0,.9)}
+.progex:hover,.exrow.simple:hover,.faqq:hover,.menu-it:hover{background:var(--card2)}
+.progex:active,.exrow.simple:active{transform:scale(.99)}
+.wday{transition:border-color .16s,transform .1s,background .16s}
+.wday:hover{background:var(--card2)}
+.wday:active{transform:scale(.995)}
+
+/* nav inferior más vivo */
+.nav span{transition:transform .18s ease}
+.nav.on span{animation:gd-pop .3s ease}
+.nav:active span{transform:scale(.9)}
+
+/* overlays: hoja que sube + fondo desenfocado */
+.overlay{backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.sheet{animation:gd-slideup .3s cubic-bezier(.2,.8,.25,1)}
+.menu{animation:gd-slideup .26s cubic-bezier(.2,.8,.25,1)}
+.x:hover,.back:hover{background:var(--card2)}
+
+/* calendario del reto: días dinámicos */
+.gday{transition:transform .12s ease,border-color .16s,background .16s,box-shadow .16s}
+.gday:hover{transform:translateY(-2px);background:var(--card)}
+.gday:active{transform:scale(.94)}
+.gday.done{box-shadow:0 0 0 1px rgba(34,197,94,.35),0 6px 16px -10px rgba(34,197,94,.5)}
+.pbar i{background:linear-gradient(90deg,#22c55e,#4ade80)}
+
+/* FOTOS de ejercicio: shimmer DETRÁS mientras carga (la imagen siempre visible encima) */
+.exgif{position:relative;overflow:hidden;background:#12141a}
+.exgif::before{content:"";position:absolute;inset:0;z-index:0;
+  background:linear-gradient(100deg,#171a22 25%,#262c3a 50%,#171a22 75%);
+  background-size:220% 100%;animation:gd-shimmer 1.25s infinite}
+.exgif.loaded::before,.exgif.noimg::before{display:none}
+.exgif img{position:relative;z-index:1;animation:gd-fade .45s ease}
+.progex-fig .exgif{box-shadow:0 4px 12px -8px rgba(0,0,0,.9)}
+.exgif.big{box-shadow:0 10px 26px -14px rgba(0,0,0,.9)}
+
+/* tipografía un pelín más marcada */
+.greet h2{letter-spacing:-.3px}
+.badge{box-shadow:0 4px 12px -6px rgba(245,158,11,.5)}
+
+/* entrada suave al cambiar de pantalla (sutil, no molesta) */
+.select,.setup{animation:gd-fade .25s ease}
+.sheet-head b{letter-spacing:-.2px}
+
+/* ===== acento por perfil: Coro (mujer) en rosa ===== */
+:root[data-profile="female"]{--acc:#ec4899}
+:root[data-profile="female"] .cta{background:linear-gradient(180deg,#f472b6,#db2777);color:#fff;box-shadow:0 8px 22px -10px rgba(236,72,153,.6)}
+:root[data-profile="female"] .cta.okc{background:linear-gradient(180deg,#be185d,#9d174d)}
+:root[data-profile="female"] .cta.ghost{background:var(--card);color:var(--tx)}
+:root[data-profile="female"] .segb.on,:root[data-profile="female"] .chip.on{color:#fff}
+:root[data-profile="female"] .pbar i{background:linear-gradient(90deg,#ec4899,#f9a8d4)}
+:root[data-profile="female"] .tsec{color:#f472b6}

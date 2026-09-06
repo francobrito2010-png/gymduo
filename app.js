@@ -10,7 +10,7 @@
 
   const PROFILES = [
     { pid: 'franco', def: 'Franco', color: '#f59e0b' },
-    { pid: 'novia', def: 'Ella', color: '#ec4899' }
+    { pid: 'novia', def: 'Coro', color: '#ec4899' }
   ]
 
   // ---------- estado UI ----------
@@ -90,7 +90,7 @@
     if (!imgs || !imgs.length) return ''
     const two = imgs.length > 1
     const cls = 'exgif' + (opts && opts.big ? ' big' : '')
-    return `<div class="${cls}"><img class="exgif-img" src="${imgs[0]}" data-a="${imgs[0]}" data-b="${imgs[two ? 1 : 0]}" alt="" loading="lazy" onerror="this.closest('.exgif').classList.add('noimg')"></div>`
+    return `<div class="${cls}"><img class="exgif-img" src="${imgs[0]}" data-a="${imgs[0]}" data-b="${imgs[two ? 1 : 0]}" alt="" loading="lazy" onload="this.closest('.exgif').classList.add('loaded')" onerror="this.closest('.exgif').classList.add('noimg')"></div>`
   }
 
   // tip del día
@@ -462,6 +462,7 @@
     // app
     const prof = curProfile()
     if (!prof || !prof.plan) { S.route = 'setup'; S.setupPid = cur(); render(); return }
+    try { document.documentElement.dataset.profile = prof.sex === 'female' ? 'female' : 'male' } catch {}
     const tabs = { reto: tabReto, tips: tabTips, perfil: tabPerfil }
     if (!tabs[S.tab]) S.tab = 'reto'
     const nav = `<nav class="bnav">${[['reto', 'Reto', '🔥'], ['tips', 'Tips', '💡'], ['perfil', 'Perfil', '👤']].map(t =>
