@@ -651,6 +651,8 @@
   setInterval(() => {
     _gifB = !_gifB
     document.querySelectorAll('.exgif-img').forEach(im => {
+      const box = im.closest('.exgif')
+      if (box && im.complete && im.naturalWidth > 0) box.classList.add('loaded')
       const t = _gifB ? im.dataset.b : im.dataset.a
       if (t && im.getAttribute('src') !== t) im.src = t
     })
