@@ -2,7 +2,8 @@
  *  GymDuo — App (vanilla JS). Renderiza todo dentro de #root.
  * ============================================================ */
 (function () {
-  const G = window.GymGeo, P = window.GymPlan, C = window.GymCalc, Pose = window.GymPose
+  const G = window.GymGeo, P = window.GymPlan, C = window.GymCalc
+  const IMG = window.EX_IMG || {}
   const EX = window.EXERCISES
   const EX_BY_ID = {}; EX.forEach(e => EX_BY_ID[e.id] = e)
   const MUS = G.MUSCLES
@@ -13,7 +14,7 @@
   ]
 
   // ---------- estado UI ----------
-  const S = { route: 'select', tab: 'hoy', setupPid: null, overlay: null, sex: 'male' }
+  const S = { route: 'select', tab: 'reto', setupPid: null, overlay: null, sex: 'male' }
   const store = window.GymStore
 
   // ---------- utilidades fecha ----------
@@ -77,6 +78,15 @@
     if (both === 'both' || both === 'back') cols += `<div class="mm-col">${G.svg(sex, 'back', state)}<span class="mm-cap">Espalda</span></div>`
     const legend = opts.legend ? `<div class="mm-legend"><span><i style="background:${G.COLORS.none}"></i>Sin trabajar</span><span><i style="background:${G.COLORS.worked}"></i>Esta semana</span><span><i style="background:${G.COLORS.today}"></i>Hoy</span></div>` : ''
     return `<div class="mm" data-map="1">${cols}</div>${legend}`
+  }
+
+  // imagen del ejercicio (2 fotos reales que se alternan = movimiento)
+  function exFig(exId, opts) {
+    const imgs = IMG[exId]
+    if (!imgs || !imgs.length) return ''
+    const two = imgs.length > 1
+    const cls = 'exgif' + (opts && opts.big ? ' big' : '')
+    return `<div class="${cls}"><img class="exgif-img" src="${imgs[0]}" data-a="${imgs[0]}" data-b="${imgs[two ? 1 : 0]}" alt="" loading="lazy" onerror="this.closest('.exgif').classList.add('noimg')"></div>`
   }
 
   // tip del día
@@ -239,8 +249,8 @@
     </div>`
   }
 
-  // ---------- CUERPO ----------
-  function tabCuerpo() {
+  // ---------- CUERPO (tarjetas, van dentro de Perfil) ----------
+  function bodyCards() {
     const prof = curProfile()
     const list = store.listBody(cur())
     const last = list[0]
@@ -250,10 +260,8 @@
     const chart = weightChart(list)
     let photo = ''
     try { const d = localStorage.getItem('gymduo:photo:' + cur()); if (d) photo = d } catch {}
-    return `<div class="tab">
-      <div class="greet"><h2>Cuerpo</h2><span>Mide tu progreso</span></div>
-      <div class="card">
-        <h3>Registrar hoy</h3>
+    return `<div class="card">
+        <h3>Registrar medidas</h3>
         <form id="bodyForm" class="bodygrid">
           ${metrics.map(m => `<label>${m[1]}<input name="${m[0]}" type="number" step="0.1" inputmode="decimal" value="${last && last[m[0]] ? esc(last[m[0]]) : ''}" placeholder="${m[0] === 'weight' ? 'kg' : 'cm'}"></label>`).join('')}
           <button type="submit" class="cta">Guardar medidas</button>
@@ -273,8 +281,7 @@
         <p class="disclaimer">Se guarda solo en este teléfono, no se sube a ningún sitio.</p>
         ${photo ? `<img class="progimg" src="${photo}" alt="foto">` : ''}
         <label class="filebtn">${photo ? 'Cambiar foto' : 'Añadir foto'}<input id="photoInput" type="file" accept="image/*" hidden></label>
-      </div>
-    </div>`
+      </div>`
   }
 
   function weightChart(list) {
@@ -313,6 +320,9 @@
     const mode = store.getMode()
     const modeTxt = mode === 'firebase' ? 'Sincronizado (Firebase)' : mode === 'artifact' ? 'Sincronizado entre dispositivos' : 'Solo en este teléfono'
     const goalTxt = prof.goal === 'masa' ? 'Subir masa' : prof.goal === 'grasa' ? 'Bajar grasa' : 'Tonificar'
+    const wk = weekMuscleState(cur())
+    const worked = Object.keys(wk)
+    const falta = Object.keys(MUS).filter(m => !worked.includes(m))
     return `<div class="tab">
       <div class="greet"><h2>Perfil</h2><span>${esc(prof.name)}</span></div>
       <div class="card kv">
@@ -323,10 +333,19 @@
         <div><span>Series</span><b>${prof.plan.prescription.series}x${prof.plan.prescription.reps}</b></div>
         <div><span>Descanso</span><b>${prof.plan.prescription.desc}</b></div>
       </div>
-      <button class="cta ghost" data-act="editProfile">Editar perfil y plan</button>
+      <button class="cta ghost" data-act="editProfile">Editar perfil y reto</button>
+
+      <h3 class="tsec">Tu cuerpo</h3>
+      <div class="card">
+        <h3>Mapa muscular (esta semana)</h3>
+        ${mapBlock(prof.sex, wk, { view: 'both', legend: true })}
+        ${falta.length ? `<div class="sugg">Te falta trabajar: <b>${falta.slice(0, 6).map(m => MUS[m].label).join(', ')}</b></div>` : '<div class="sugg ok">¡Semana completa! 🔥</div>'}
+      </div>
+      ${bodyCards()}
+
       <div class="card sync"><span class="sdot ${mode}"></span>${modeTxt}</div>
       <button class="cta ghost" data-act="switch">Cambiar de perfil</button>
-      <p class="ver">GymDuo · para los dos 💪</p>
+      <p class="ver">GymDuo · para los dos 💪 · imágenes: free-exercise-db (dominio público)</p>
     </div>`
   }
 
@@ -374,7 +393,7 @@
     return `<div class="overlay"><div class="sheet">
       <div class="sheet-head"><b>${esc(ex.nombre)}</b><button class="x" data-act="close">✕</button></div>
       <div class="exficha">
-        <div class="ficha-pose">${Pose.pairFor(ex)}</div>
+        ${exFig(id, { big: true }) || ''}
         <div class="ficha-map">${G.svg(curProfile().sex, MUS[ex.musculo] && MUS[ex.musculo].view === 'back' ? 'back' : 'front', st)}</div>
         <div class="ficha-txt">
           <div class="chips"><span class="chip on">${MUS[ex.musculo] ? MUS[ex.musculo].label : ex.musculo}</span>${sec.map(s => `<span class="chip">${s}</span>`).join('')}</div>
@@ -403,7 +422,7 @@
     const rows = d.exercises.map(pe => {
       const ex = EX_BY_ID[pe.id]; if (!ex) return ''
       return `<div class="progex" data-act="openEx" data-id="${pe.id}">
-        <div class="progex-fig">${Pose.svgFor(ex, 'work')}</div>
+        <div class="progex-fig">${exFig(pe.id) || ('<div class="progex-noimg">' + esc(ex.nombre[0]) + '</div>')}</div>
         <div class="progex-main"><b>${esc(ex.nombre)}</b><small>${pe.series} series · ${pe.reps} reps${pe.tempo ? ' · lento' : ''} · descanso ${pe.desc}</small></div>
         <span class="arr">›</span>
       </div>`
@@ -439,8 +458,9 @@
     // app
     const prof = curProfile()
     if (!prof || !prof.plan) { S.route = 'setup'; S.setupPid = cur(); render(); return }
-    const tabs = { hoy: tabHoy, semana: tabSemana, reto: tabReto, cuerpo: tabCuerpo, tips: tabTips, perfil: tabPerfil }
-    const nav = `<nav class="bnav">${[['hoy', 'Hoy', '🏋️'], ['semana', 'Semana', '📅'], ['reto', 'Reto', '🔥'], ['cuerpo', 'Cuerpo', '📈'], ['tips', 'Tips', '💡'], ['perfil', 'Perfil', '👤']].map(t =>
+    const tabs = { reto: tabReto, tips: tabTips, perfil: tabPerfil }
+    if (!tabs[S.tab]) S.tab = 'reto'
+    const nav = `<nav class="bnav">${[['reto', 'Reto', '🔥'], ['tips', 'Tips', '💡'], ['perfil', 'Perfil', '👤']].map(t =>
       `<button class="nav ${S.tab === t[0] ? 'on' : ''}" data-act="tab" data-t="${t[0]}"><span>${t[2]}</span>${t[1]}</button>`).join('')}</nav>`
     let ov = ''
     if (S.overlay) {
@@ -474,7 +494,7 @@
     if (a === 'pick') {
       store.setCurrent(el.dataset.pid)
       const prof = store.getProfile(el.dataset.pid)
-      if (prof && prof.plan) { S.route = 'app'; S.tab = 'hoy' } else { S.route = 'setup'; S.setupPid = el.dataset.pid }
+      if (prof && prof.plan) { S.route = 'app'; S.tab = 'reto' } else { S.route = 'setup'; S.setupPid = el.dataset.pid }
       render()
     }
     else if (a === 'toSelect') { S.route = 'select'; render() }
@@ -535,7 +555,7 @@
     data.split = data.plan.split
     store.setProfile(S.setupPid, data)
     store.setCurrent(S.setupPid)
-    S.route = 'app'; S.tab = 'hoy'; render()
+    S.route = 'app'; S.tab = 'reto'; render()
   }
 
   function currentWorkout(date) {
@@ -560,7 +580,7 @@
   function finishSession(date) {
     const w = currentWorkout(date)
     store.setWorkout(cur(), date, { exercises: w.exercises, finished: true })
-    S.overlay = null; S.tab = 'semana'; render()
+    S.overlay = null; S.tab = 'reto'; render()
   }
   function saveBody(form) {
     const data = {}
@@ -620,6 +640,16 @@
     store.setProfile(cur(), { program: null })
     render()
   }
+
+  // animación de las fotos de ejercicio (alterna inicio ↔ final)
+  let _gifB = false
+  setInterval(() => {
+    _gifB = !_gifB
+    document.querySelectorAll('.exgif-img').forEach(im => {
+      const t = _gifB ? im.dataset.b : im.dataset.a
+      if (t && im.getAttribute('src') !== t) im.src = t
+    })
+  }, 1200)
 
   // ---------- arranque ----------
   store.onChange(() => { if (document.getElementById('root')) render() })
