@@ -81,8 +81,12 @@
   }
 
   // imagen del ejercicio (2 fotos reales que se alternan = movimiento)
+  // Si el perfil es mujer y hay set femenino disponible, se usa ese.
   function exFig(exId, opts) {
-    const imgs = IMG[exId]
+    const prof = curProfile()
+    const femSet = window.EX_IMG_F || {}
+    const useFem = prof && prof.sex === 'female' && femSet[exId] && femSet[exId].length
+    const imgs = useFem ? femSet[exId] : IMG[exId]
     if (!imgs || !imgs.length) return ''
     const two = imgs.length > 1
     const cls = 'exgif' + (opts && opts.big ? ' big' : '')
