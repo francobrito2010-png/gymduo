@@ -186,3 +186,34 @@ b{font-weight:700}
 .menu b{margin-bottom:4px}
 .menu-it{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;
   padding:14px;font-size:15px;min-height:var(--tap)}
+
+/* ---------- ilustraciones de ejercicios (poses) ---------- */
+.pose-svg{width:100%;height:100%;display:block;color:#c7cfdb}
+.pose-pair{display:flex;align-items:center;justify-content:center;gap:6px;color:#c7cfdb}
+.pose-cell{display:flex;flex-direction:column;align-items:center;width:80px}
+.pose-cell .pose-svg{height:120px}
+.pose-cell em{font-size:10px;color:var(--mut);font-style:normal;margin-top:2px}
+.pose-arrow{color:var(--acc);font-size:20px}
+.pose-pair.single .pose-cell{width:104px}
+.ficha-pose{background:var(--bg2);border-radius:12px;padding:8px;margin-bottom:4px}
+
+/* ---------- reto: filas de ejercicio con dibujo ---------- */
+.progex{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 10px;cursor:pointer;min-height:var(--tap)}
+.progex-fig{width:46px;height:80px;flex:none;color:#c7cfdb}
+.progex-fig .pose-svg{height:80px}
+.progex-main{flex:1;min-width:0}
+.progex-main b{font-size:15px;display:block}
+.progex-main small{font-size:12px;color:var(--mut)}
+
+/* ---------- reto: calendario ---------- */
+.pbar{height:10px;background:var(--card2);border-radius:999px;overflow:hidden;margin-bottom:8px}
+.pbar i{display:block;height:100%;background:var(--acc);border-radius:999px;transition:width .3s}
+.gcal{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.gday{aspect-ratio:1/1.18;background:var(--card2);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;position:relative;color:var(--tx)}
+.gday b{font-size:16px}
+.gday small{font-size:9px;color:var(--mut)}
+.gday i{font-size:10px;font-style:normal;position:absolute;top:3px;right:5px}
+.gday.done{border-color:var(--acc);background:rgba(34,197,94,.12)}
+.gday.done i{color:var(--acc)}
+.gday.off{opacity:.55}
+.gday.now{border-color:var(--acc2);box-shadow:0 0 0 1px var(--acc2)}

@@ -2,7 +2,7 @@
  *  GymDuo — App (vanilla JS). Renderiza todo dentro de #root.
  * ============================================================ */
 (function () {
-  const G = window.GymGeo, P = window.GymPlan, C = window.GymCalc
+  const G = window.GymGeo, P = window.GymPlan, C = window.GymCalc, Pose = window.GymPose
   const EX = window.EXERCISES
   const EX_BY_ID = {}; EX.forEach(e => EX_BY_ID[e.id] = e)
   const MUS = G.MUSCLES
@@ -26,6 +26,10 @@
     const mon = new Date(now); mon.setDate(now.getDate() - d0)
     return [...Array(7)].map((_, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i); return iso(d) })
   }
+  const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00') - new Date(a + 'T00:00')) / 86400000)
+  const isoPlus = (start, add) => { const d = new Date(start + 'T00:00'); d.setDate(d.getDate() + add); return iso(d) }
+  const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  const fechaCorta = (isoStr) => { const d = new Date(isoStr + 'T00:00'); return d.getDate() + ' ' + MESES[d.getMonth()] }
 
   const cur = () => store.current
   const curProfile = () => store.getProfile(cur())
@@ -189,6 +193,52 @@
     </div>`
   }
 
+  // ---------- RETO 30 DÍAS ----------
+  function tabReto() {
+    const prof = curProfile()
+    const prog = prof.program
+    if (!prog) {
+      return `<div class="tab">
+        <div class="greet"><h2>Reto 30 días</h2><span>día a día</span></div>
+        <div class="card">
+          <h3>Reto de 30 días 🔥</h3>
+          <p class="muted" style="line-height:1.5">Un programa de 30 días: cada día tienes ejercicios con <b>dibujos de cómo se hacen</b>. Marcas el día y ves tu progreso. Adaptado a tu objetivo, nivel y equipo, y sube de dificultad cada semana.</p>
+          <div class="chips" style="margin-top:10px"><span class="chip">${prof.days} días/semana</span><span class="chip">Con ilustraciones</span><span class="chip">Progresa por semanas</span></div>
+          <button class="cta" data-act="startProgram">Empezar reto de 30 días</button>
+        </div>
+      </div>`
+    }
+    const today = todayISO()
+    const doneCount = Object.keys(prog.done || {}).length
+    const curN = daysBetween(prog.startDate, today) + 1
+    const pct = Math.round(doneCount / 30 * 100)
+    let todayCard = ''
+    if (curN >= 1 && curN <= 30) {
+      const d = prog.days[curN - 1]
+      todayCard = d.rest
+        ? `<div class="card rest"><h3>Hoy · Día ${curN}: descanso 😌</h3><p class="muted">Recupera. Mañana seguimos.</p></div>`
+        : `<div class="card"><div class="card-top"><span class="badge">Hoy · Día ${curN}</span>${prog.done[curN] ? '<span class="prog">✓ hecho</span>' : ''}</div><span class="wt">${d.title}</span><button class="cta" data-act="openProgDay" data-n="${curN}">Ver ejercicios de hoy</button></div>`
+    } else if (curN > 30) {
+      todayCard = `<div class="card"><h3>¡Reto completado! 🎉</h3><p class="muted">Hiciste ${doneCount}/30 días. Puedes empezarlo otra vez más fuerte.</p></div>`
+    } else {
+      todayCard = `<div class="card"><h3>Empieza mañana 💪</h3><p class="muted">El reto arranca el ${fechaCorta(prog.startDate)}.</p></div>`
+    }
+    const grid = prog.days.map(d => {
+      const date = isoPlus(prog.startDate, d.n - 1)
+      const done = prog.done && prog.done[d.n]
+      const isToday = date === today
+      return `<button class="gday ${d.rest ? 'off' : ''} ${done ? 'done' : ''} ${isToday ? 'now' : ''}" data-act="openProgDay" data-n="${d.n}">
+        <b>${d.n}</b><small>${fechaCorta(date)}</small>${done ? '<i>✓</i>' : d.rest ? '<i class="z">😴</i>' : '<i class="t"></i>'}</button>`
+    }).join('')
+    return `<div class="tab">
+      <div class="greet"><h2>Reto 30 días</h2><span>${doneCount}/30 hechos</span></div>
+      <div class="card"><div class="pbar"><i style="width:${pct}%"></i></div><span class="muted" style="font-size:13px">Progreso: ${doneCount} de 30 días</span></div>
+      ${todayCard}
+      <div class="card"><h3>Calendario del reto</h3><div class="gcal">${grid}</div></div>
+      <button class="cta ghost" data-act="resetProgram">Reiniciar reto</button>
+    </div>`
+  }
+
   // ---------- CUERPO ----------
   function tabCuerpo() {
     const prof = curProfile()
@@ -324,6 +374,7 @@
     return `<div class="overlay"><div class="sheet">
       <div class="sheet-head"><b>${esc(ex.nombre)}</b><button class="x" data-act="close">✕</button></div>
       <div class="exficha">
+        <div class="ficha-pose">${Pose.pairFor(ex)}</div>
         <div class="ficha-map">${G.svg(curProfile().sex, MUS[ex.musculo] && MUS[ex.musculo].view === 'back' ? 'back' : 'front', st)}</div>
         <div class="ficha-txt">
           <div class="chips"><span class="chip on">${MUS[ex.musculo] ? MUS[ex.musculo].label : ex.musculo}</span>${sec.map(s => `<span class="chip">${s}</span>`).join('')}</div>
@@ -341,6 +392,29 @@
       <div class="sheet-head"><b>${MUS[m] ? MUS[m].label : m}</b><button class="x" data-act="close">✕</button></div>
       <p class="muted">Ejercicios que lo entrenan:</p>
       <div class="exlist">${exs.map(e => `<div class="exrow simple" data-act="openEx" data-id="${e.id}"><div class="exmain"><b>${esc(e.nombre)}</b><small>${e.musculo === m ? 'Principal' : 'Secundario'} · ${e.equipo === 'gym' ? 'Gym' : e.equipo === 'mancuernas' ? 'Mancuernas' : 'Peso corporal'}</small></div><span class="arr">›</span></div>`).join('')}</div>
+    </div></div>`
+  }
+
+  function overlayProgramDay(n) {
+    const prof = curProfile(); const prog = prof.program; if (!prog) return ''
+    const d = prog.days[n - 1]; if (!d) return ''
+    if (d.rest) return `<div class="overlay"><div class="sheet"><div class="sheet-head"><b>Día ${n} · Descanso</b><button class="x" data-act="close">✕</button></div><p class="muted">Hoy toca descansar. Camina, estira y duerme bien: es parte del entrenamiento.</p><button class="cta" data-act="close">Entendido</button></div></div>`
+    const done = prog.done && prog.done[n]
+    const rows = d.exercises.map(pe => {
+      const ex = EX_BY_ID[pe.id]; if (!ex) return ''
+      return `<div class="progex" data-act="openEx" data-id="${pe.id}">
+        <div class="progex-fig">${Pose.svgFor(ex, 'work')}</div>
+        <div class="progex-main"><b>${esc(ex.nombre)}</b><small>${pe.series} series · ${pe.reps} reps${pe.tempo ? ' · lento' : ''} · descanso ${pe.desc}</small></div>
+        <span class="arr">›</span>
+      </div>`
+    }).join('')
+    return `<div class="overlay"><div class="sheet">
+      <div class="sheet-head"><b>Día ${n} · ${d.title}</b><button class="x" data-act="close">✕</button></div>
+      <div class="chips">${d.muscles.map(m => `<span class="chip">${MUS[m] ? MUS[m].label : m}</span>`).join('')}</div>
+      ${d.tempo ? '<p class="muted" style="font-size:13px;margin:8px 0 0">Semana 3: haz cada repetición <b>lenta</b> (cuenta 3 al bajar). Pesa más de lo que parece.</p>' : ''}
+      <p class="muted" style="font-size:12.5px;margin:8px 0 0">Toca un ejercicio para ver la técnica.</p>
+      <div class="exlist">${rows}</div>
+      <button class="cta ${done ? 'okc' : ''}" data-act="finishProgDay" data-n="${n}">${done ? '✓ Día completado' : 'Marcar día como hecho'}</button>
     </div></div>`
   }
 
@@ -365,14 +439,15 @@
     // app
     const prof = curProfile()
     if (!prof || !prof.plan) { S.route = 'setup'; S.setupPid = cur(); render(); return }
-    const tabs = { hoy: tabHoy, semana: tabSemana, cuerpo: tabCuerpo, tips: tabTips, perfil: tabPerfil }
-    const nav = `<nav class="bnav">${[['hoy', 'Hoy', '🏋️'], ['semana', 'Semana', '📅'], ['cuerpo', 'Cuerpo', '📈'], ['tips', 'Tips', '💡'], ['perfil', 'Perfil', '👤']].map(t =>
+    const tabs = { hoy: tabHoy, semana: tabSemana, reto: tabReto, cuerpo: tabCuerpo, tips: tabTips, perfil: tabPerfil }
+    const nav = `<nav class="bnav">${[['hoy', 'Hoy', '🏋️'], ['semana', 'Semana', '📅'], ['reto', 'Reto', '🔥'], ['cuerpo', 'Cuerpo', '📈'], ['tips', 'Tips', '💡'], ['perfil', 'Perfil', '👤']].map(t =>
       `<button class="nav ${S.tab === t[0] ? 'on' : ''}" data-act="tab" data-t="${t[0]}"><span>${t[2]}</span>${t[1]}</button>`).join('')}</nav>`
     let ov = ''
     if (S.overlay) {
       if (S.overlay.k === 'session') ov = overlaySession(S.overlay.date)
       else if (S.overlay.k === 'ex') ov = overlayExercise(S.overlay.id)
       else if (S.overlay.k === 'muscle') ov = overlayMuscle(S.overlay.m)
+      else if (S.overlay.k === 'progday') ov = overlayProgramDay(S.overlay.n)
       else if (S.overlay.k === 'daymenu') ov = overlayDayMenu(S.overlay.i)
     }
     r.innerHTML = `<div class="app">${tabs[S.tab]()}</div>${nav}${ov}`
@@ -414,6 +489,10 @@
       if (box) { box.hidden = !box.hidden; el.querySelector('span').textContent = box.hidden ? '+' : '–' }
     }
     else if (a === 'dayMenu') { S.overlay = { k: 'daymenu', i: +el.dataset.i }; render() }
+    else if (a === 'startProgram') { startProgram() }
+    else if (a === 'openProgDay') { S.overlay = { k: 'progday', n: +el.dataset.n }; render() }
+    else if (a === 'finishProgDay') { finishProgDay(+el.dataset.n) }
+    else if (a === 'resetProgram') { resetProgram() }
     else if (a === 'toggleEx') { toggleEx(el.dataset.id, el.dataset.date); }
     else if (a === 'finishSession') { finishSession(el.dataset.date) }
     else if (a === 'toggleRest') { toggleRest(+el.dataset.i) }
@@ -516,6 +595,30 @@
     prof.plan.week = wk
     store.setProfile(cur(), { plan: prof.plan })
     S.overlay = null; render()
+  }
+  function startProgram() {
+    const prof = curProfile()
+    const prog = P.buildProgram(prof, todayISO())
+    prog.done = {}
+    store.setProfile(cur(), { program: prog })
+    render()
+  }
+  function finishProgDay(n) {
+    const prof = curProfile(); const prog = prof.program; if (!prog) return
+    const d = prog.days[n - 1]
+    prog.done = prog.done || {}
+    prog.done[n] = true
+    store.setProfile(cur(), { program: prog })
+    if (d && !d.rest) {
+      const date = isoPlus(prog.startDate, n - 1)
+      store.setWorkout(cur(), date, { exercises: d.exercises.map(e => ({ id: e.id, done: true, weight: '', reps: '' })), finished: true, program: n })
+    }
+    S.overlay = null; render()
+  }
+  function resetProgram() {
+    if (!confirm('¿Reiniciar el reto de 30 días? Perderás el progreso del reto (no tus medidas).')) return
+    store.setProfile(cur(), { program: null })
+    render()
   }
 
   // ---------- arranque ----------

@@ -113,7 +113,37 @@
     return day.muscles || []
   }
 
-  window.GymPlan = { build, musclesOfDay, DAYS, TARGETS }
+  // ---- RETO de 30 días (estilo Darebee): días secuenciales + progresión semanal ----
+  function buildProgram(profile, startDate) {
+    const { goal, level, days, equip } = profile
+    const allowed = EQUIP_ALLOW[equip] || EQUIP_ALLOW.gym
+    const sp = splitFor(days)
+    const baseRx = prescription(goal, level)
+    const count = level === 'principiante' ? 5 : 6
+    // sesiones base (una por entrada de la secuencia del split)
+    const base = sp.seq.map((type, i) => {
+      const exs = pickExercises(TARGETS[type], allowed, level, count, i)
+      const muscles = [...new Set(exs.flatMap(e => [e.musculo, ...(e.sec || [])]))]
+      return { type, title: TYPE_LABEL[type], exs, muscles }
+    })
+    const list = []
+    let ti = 0
+    for (let n = 1; n <= 30; n++) {
+      const diw = ((n - 1) % 7) + 1
+      if (diw > days) { list.push({ n, rest: true }); continue }
+      const week = Math.ceil(n / 7)
+      const s = base[ti % base.length]; ti++
+      const series = baseRx.series + (week >= 2 ? 1 : 0) + (week >= 4 ? 1 : 0)
+      const tempo = week === 3
+      list.push({
+        n, rest: false, week, title: s.title, muscles: s.muscles,
+        exercises: s.exs.map(e => ({ id: e.id, series, reps: baseRx.reps, desc: baseRx.desc, tempo }))
+      })
+    }
+    return { startDate, generatedAt: Date.now(), reps: baseRx.reps, days: list }
+  }
+
+  window.GymPlan = { build, buildProgram, musclesOfDay, DAYS, TARGETS }
 
   // ---------------- CÁLCULOS ----------------
   function imc(kg, cm) {
